@@ -5,7 +5,7 @@ A tiny companion app for [Cocoon](https://github.com/inssekt/CocoonFE) on the AY
 Cocoon itself is closed-source, so this can't be a button inside Now Playing. Instead it's a separate app styled to match Cocoon's look, pinned to the dock and set to open on the bottom screen.
 
 ## Install
-1. Download `cocoon-ra.apk` from [Releases → latest](../../releases/latest) on the Thor and install it.
+1. Download the `cocoon-ra-v1.0.N.apk` from [Releases → latest](../../releases/latest) on the Thor and install it, or add this repo to Obtainium.
 2. Open **Achievements** and enter your RetroAchievements username and **Web API Key**. The key is on retroachievements.org → Settings → Authentication. This is the same key Cocoon uses.
 
 ## Hook it into Cocoon
@@ -18,4 +18,4 @@ Cocoon itself is closed-source, so this can't be a button inside Now Playing. In
 - Tap an achievement to see its comments. *Open on RetroAchievements* opens the full page.
 - It follows the system's light or dark mode. The colours are at the top of `MainActivity.kt`, so you can match your Cocoon theme.
 
-Every push to `main` builds a new APK through GitHub Actions. All builds use the same signing key, so updates install over the old version.
+Every push to `main` builds a new APK through GitHub Actions and publishes it as its own release (`v1.0.<build number>`). All builds use the same signing key, so updates install over the old version.

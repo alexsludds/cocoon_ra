@@ -11,8 +11,9 @@ android {
         applicationId = "com.alexsludds.cocoonra"
         minSdk = 26
         targetSdk = 35
-        versionCode = 2
-        versionName = "1.1"
+        // Each CI run gets its own version (v1.0.<run number>) so updaters like Obtainium see a new release.
+        versionCode = (System.getenv("GITHUB_RUN_NUMBER") ?: "1").toInt()
+        versionName = "1.0.$versionCode"
     }
     // Fixed key committed to the repo so every CI build can be installed over the previous one.
     signingConfigs.getByName("debug") {

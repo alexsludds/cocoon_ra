@@ -14,9 +14,9 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
         with: { gradle-version: "8.11.1" }
       - run: gradle :app:assembleDebug --no-daemon
-      - run: cp app/build/outputs/apk/debug/app-debug.apk cocoon-ra.apk
-      - name: Publish to the "latest" release
-        env: { GH_TOKEN: "${{ github.token }}" }
+      - run: cp app/build/outputs/apk/debug/app-debug.apk cocoon-ra-v1.0.${{ github.run_number }}.apk
+      - name: Publish release v1.0.${{ github.run_number }}
+        env: { GH_TOKEN: "${{ github.token }}", V: "v1.0.${{ github.run_number }}" }
         run: |
-          gh release delete latest --yes --cleanup-tag || true
-          gh release create latest cocoon-ra.apk --target "$GITHUB_SHA" --title "Latest build" --notes "Built from ${GITHUB_SHA::7}"
+          gh release delete latest --yes --cleanup-tag || true   # remove the old fixed-name release
+          gh release create "$V" "cocoon-ra-$V.apk" --target "$GITHUB_SHA" --title "$V" --notes "Built from ${GITHUB_SHA::7}" --latest
