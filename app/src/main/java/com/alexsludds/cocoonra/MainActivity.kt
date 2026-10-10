@@ -11,6 +11,8 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -62,7 +64,7 @@ fun JSONObject.k(n: String): Any? = keys().asSequence().firstOrNull { it.equals(
 fun JSONObject.s(n: String) = k(n)?.toString() ?: ""
 fun JSONObject.i(n: String) = s(n).toDoubleOrNull()?.toInt() ?: 0
 
-data class Ach(val id: Int, val title: String, val desc: String, val points: Int, val badge: String, val earned: String?, val hardcore: Boolean, val order: Int, val pct: Int)
+data class Ach(val id: Int, val title: String, val desc: String, val points: Int, val badge: String, val earned: String?, val hardcore: Boolean, val order: Int, val pct: Int, val missable: Boolean)
 data class Game(val id: Int, val title: String, val console: String, val icon: String, val presence: String, val achs: List<Ach>) {
     val earned get() = achs.count { it.earned != null }
     val earnedHc get() = achs.count { it.hardcore }
@@ -85,7 +87,7 @@ class Ra(private val user: String, private val key: String) {
         val list = (g.k("Achievements") as? JSONObject)?.let { o -> o.keys().asSequence().map { o.getJSONObject(it) }.map { a ->
             val hc = a.s("DateEarnedHardcore").ifEmpty { null }
             Ach(a.i("ID"), a.s("Title"), a.s("Description"), a.i("Points"), a.s("BadgeName"), hc ?: a.s("DateEarned").ifEmpty { null },
-                hc != null, a.i("DisplayOrder"), a.i("NumAwarded") * 100 / players)
+                hc != null, a.i("DisplayOrder"), a.i("NumAwarded") * 100 / players, a.s("Type") == "missable")
         }.sortedBy { it.order }.toList() } ?: emptyList()
         return Game(g.i("ID"), g.s("Title"), g.s("ConsoleName"), MEDIA + g.s("ImageIcon"), p.s("RichPresenceMsg"), list)
     }
@@ -160,11 +162,13 @@ fun Main(game: Game?, err: String?, onRefresh: () -> Unit, onSettings: () -> Uni
         if (game == null) { if (err == null) item { Text("Loading…", color = p.sub) }; return@LazyColumn }
         item { GameCard(game) }
         item {
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                listOf("All", "Locked", "Unlocked").forEachIndexed { i, t -> Pill(t, filter == i) { filter = i } }
+            Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                listOf("All", "Locked", "Unlocked", "Missable").forEachIndexed { i, t -> Pill(t, filter == i) { filter = i } }
             }
         }
-        items(game.achs.filter { filter == 0 || (filter == 2) == (it.earned != null) }, key = { it.id }) { AchRow(it) { onOpen(it) } }
+        val shown = game.achs.filter { when (filter) { 1 -> it.earned == null; 2 -> it.earned != null; 3 -> it.missable; else -> true } }
+        if (shown.isEmpty()) item { Text(if (filter == 3) "No achievements in this set are marked missable." else "Nothing here.", color = p.sub) }
+        items(shown, key = { it.id }) { AchRow(it) { onOpen(it) } }
     }
 }
 
@@ -209,7 +213,7 @@ fun AchRow(a: Ach, onClick: () -> Unit) {
         Column(Modifier.weight(1f)) {
             Text(a.title, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
             Text(a.desc, color = p.sub, fontSize = 12.sp, maxLines = 2, overflow = TextOverflow.Ellipsis)
-            Text(listOfNotNull(a.earned?.let { "Unlocked ${it.take(10)}" }, "${a.pct}% of players").joinToString(" · "), color = p.sub, fontSize = 11.sp)
+            Text(listOfNotNull("Missable".takeIf { a.missable }, a.earned?.let { "Unlocked ${it.take(10)}" }, "${a.pct}% of players").joinToString(" · "), color = p.sub, fontSize = 11.sp)
         }
         Spacer(Modifier.width(8.dp))
         Points(a)
@@ -236,7 +240,7 @@ fun Detail(a: Ach, ra: Ra, onBack: () -> Unit) {
                 Spacer(Modifier.height(12.dp))
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Points(a); Spacer(Modifier.width(8.dp))
-                    Text(listOfNotNull(a.earned?.let { "Unlocked ${it.take(10)}" + if (a.hardcore) " (hardcore)" else "" }, "${a.pct}% of players").joinToString(" · "), color = p.sub, fontSize = 12.sp)
+                    Text(listOfNotNull("Missable".takeIf { a.missable }, a.earned?.let { "Unlocked ${it.take(10)}" + if (a.hardcore) " (hardcore)" else "" }, "${a.pct}% of players").joinToString(" · "), color = p.sub, fontSize = 12.sp)
                 }
                 Spacer(Modifier.height(14.dp))
                 Pill("Open on RetroAchievements", true) { ctx.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://retroachievements.org/achievement/${a.id}"))) }

@@ -14,7 +14,7 @@ Cocoon itself is closed-source, so this can't be a button inside Now Playing. In
 
 ## How it works
 - The current game is your RetroAchievements "last game", which your emulator updates as you play. The list refreshes every 30 s, so new unlocks show up while you play on the top screen.
-- Filter by All / Locked / Unlocked. A gold border means a hardcore unlock.
+- Filter by All / Locked / Unlocked / Missable. Missable uses the tag set-makers give achievements you can permanently miss. A gold border means a hardcore unlock.
 - Tap an achievement to see its comments. *Open on RetroAchievements* opens the full page.
 - It follows the system's light or dark mode. The colours are at the top of `MainActivity.kt`, so you can match your Cocoon theme.
 
